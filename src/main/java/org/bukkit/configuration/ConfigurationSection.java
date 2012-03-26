@@ -718,4 +718,48 @@ public interface ConfigurationSection {
      * @throws IllegalArgumentException Thrown if path is null.
      */
     public void addDefault(String path, Object value);
+    
+    /**
+     * Gets the requested object by path.
+     * <p>
+     * If the object does not exist but a default value has been specified, this
+     * will return the default value. If the object does not exist and no default
+     * value was specified, this will return null.
+     * <p>
+     * The object will always be of the specified class.
+     * 
+     * @param clazz The class to cast to.
+     * @param path Path of the object to get.
+     * @return Requested ItemStack.
+     */
+    public <T> T get(Class<T> clazz, String path);
+    
+    /**
+     * Gets the requested object by path, returning a default value if not found.
+     * <p>
+     * If the object does not exist then the specified default value will returned
+     * regardless of if a default has been identified in the root {@link Configuration}.
+     * <p>
+     * The object will always be of the specified class.
+     *
+     * @param clazz The class to cast to.
+     * @param path Path of the ItemStack to get.
+     * @param def The default value to return if the path is not found or is not of the class.
+     * @return Requested object.
+     */
+    public <T> T get(Class<T> clazz, String path, T def);
+    
+    /**
+     * Checks if the specified path is of the class.
+     * <p>
+     * If the path exists but is not of the class, this will return false. If the path
+     * does not exist, this will return false. If the path does not exist but a default 
+     * value has been specified, this will check if that default value is of the class 
+     * and return appropriately.
+     *
+     * @param clazz The class to check against.
+     * @param path Path to check.
+     * @return Whether or not the specified path is of the class.
+     */
+    public boolean is(Class<?> clazz, String path);
 }

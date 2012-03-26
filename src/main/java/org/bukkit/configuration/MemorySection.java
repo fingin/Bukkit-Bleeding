@@ -259,8 +259,7 @@ public class MemorySection implements ConfigurationSection {
     }
 
     public boolean isString(String path) {
-        Object val = get(path);
-        return val instanceof String;
+        return is(String.class, path);
     }
 
     public int getInt(String path) {
@@ -274,23 +273,20 @@ public class MemorySection implements ConfigurationSection {
     }
 
     public boolean isInt(String path) {
-        Object val = get(path);
-        return val instanceof Integer;
+        return is(Integer.class, path);
     }
 
     public boolean getBoolean(String path) {
         Object def = getDefault(path);
-        return getBoolean(path, (def instanceof Boolean) ? (Boolean) def : false);
+        return get(Boolean.class, path, (def instanceof Boolean) ? (Boolean) def : Boolean.FALSE);
     }
 
     public boolean getBoolean(String path, boolean def) {
-        Object val = get(path, def);
-        return (val instanceof Boolean) ? (Boolean) val : def;
+        return get(Boolean.class, path, def);
     }
 
     public boolean isBoolean(String path) {
-        Object val = get(path);
-        return val instanceof Boolean;
+        return is(Boolean.class, path);
     }
 
     public double getDouble(String path) {
@@ -304,8 +300,7 @@ public class MemorySection implements ConfigurationSection {
     }
 
     public boolean isDouble(String path) {
-        Object val = get(path);
-        return val instanceof Double;
+        return is(Double.class, path);
     }
 
     public long getLong(String path) {
@@ -319,28 +314,39 @@ public class MemorySection implements ConfigurationSection {
     }
 
     public boolean isLong(String path) {
-        Object val = get(path);
-        return val instanceof Long;
+        return is(Long.class, path);
     }
 
     // Java
-    public List<?> getList(String path) {
+    @SuppressWarnings("unchecked") // Removing this requires a try/catch or second call
+    public <T> T get(Class<T> clazz, String path) {
+        Validate.notNull(clazz, "Class cannot be null");
         Object def = getDefault(path);
-        return getList(path, (def instanceof List) ? (List<?>) def : null);
+        return get(clazz, path, clazz.isInstance(def) ? (T) def : null);
+    }
+
+    @SuppressWarnings("unchecked") // Removing this requires a try/catch or second call
+    public <T> T get(Class<T> clazz, String path, T def) {
+        Validate.notNull(clazz, "Class cannot be null");
+        Object val = get(path, null);
+        return clazz.isInstance(val) ? (T) val : def;
+    }
+
+    public boolean is(Class<?> clazz, String path) {
+        Validate.notNull(clazz, "Class cannot be null");
+        return clazz.isInstance(get(path));
+    }
+
+    public List<?> getList(String path) {
+        return get(List.class, path);
     }
 
     public List<?> getList(String path, List<?> def) {
-        Object val = get(path, def);
-        return (List<?>) ((val instanceof List) ? val : def);
+        return get(List.class, path, def);
     }
 
     public boolean isList(String path) {
-        if (path == null) {
-            throw new IllegalArgumentException("Path cannot be null");
-        }
-
-        Object val = get(path);
-        return val instanceof List;
+        return is(List.class, path);
     }
 
     public List<String> getStringList(String path) {
@@ -668,48 +674,39 @@ public class MemorySection implements ConfigurationSection {
 
     // Bukkit
     public Vector getVector(String path) {
-        Object def = getDefault(path);
-        return getVector(path, (def instanceof Vector) ? (Vector) def : null);
+        return get(Vector.class, path);
     }
 
     public Vector getVector(String path, Vector def) {
-        Object val = get(path, def);
-        return (val instanceof Vector) ? (Vector) val : def;
+        return get(Vector.class, path, def);
     }
 
     public boolean isVector(String path) {
-        Object val = get(path);
-        return val instanceof Vector;
+        return is(Vector.class, path);
     }
 
     public OfflinePlayer getOfflinePlayer(String path) {
-        Object def = getDefault(path);
-        return getOfflinePlayer(path, (def instanceof OfflinePlayer) ? (OfflinePlayer) def : null);
+        return get(OfflinePlayer.class, path);
     }
 
     public OfflinePlayer getOfflinePlayer(String path, OfflinePlayer def) {
-        Object val = get(path, def);
-        return (val instanceof OfflinePlayer) ? (OfflinePlayer) val : def;
+        return get(OfflinePlayer.class, path, def);
     }
 
     public boolean isOfflinePlayer(String path) {
-        Object val = get(path);
-        return val instanceof OfflinePlayer;
+        return is(OfflinePlayer.class, path);
     }
 
     public ItemStack getItemStack(String path) {
-        Object def = getDefault(path);
-        return getItemStack(path, (def instanceof ItemStack) ? (ItemStack) def : null);
+        return get(ItemStack.class, path);
     }
 
     public ItemStack getItemStack(String path, ItemStack def) {
-        Object val = get(path, def);
-        return (val instanceof ItemStack) ? (ItemStack) val : def;
+        return get(ItemStack.class, path, def);
     }
 
     public boolean isItemStack(String path) {
-        Object val = get(path);
-        return val instanceof ItemStack;
+        return is(ItemStack.class, path);
     }
 
     public ConfigurationSection getConfigurationSection(String path) {
@@ -723,8 +720,7 @@ public class MemorySection implements ConfigurationSection {
     }
 
     public boolean isConfigurationSection(String path) {
-        Object val = get(path);
-        return val instanceof ConfigurationSection;
+        return is(ConfigurationSection.class, path);
     }
 
     protected boolean isPrimitiveWrapper(Object input) {
