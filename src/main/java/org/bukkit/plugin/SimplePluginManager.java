@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -136,6 +138,7 @@ public final class SimplePluginManager implements PluginManager {
             }
 
             plugins.put(description.getName(), file);
+            log("prp_ " + description.getName()); // LOGLINE
 
             Collection<String> softDependencySet = description.getSoftDepend();
             if (softDependencySet != null) {
@@ -145,11 +148,13 @@ public final class SimplePluginManager implements PluginManager {
                 } else {
                     softDependencies.put(description.getName(), new LinkedList<String>(softDependencySet));
                 }
+                log("sft_ ", softDependencySet); // LOGLINE
             }
 
             Collection<String> dependencySet = description.getDepend();
             if (dependencySet != null) {
                 dependencies.put(description.getName(), new LinkedList<String>(dependencySet));
+                log("hrd_ ", dependencySet); // LOGLINE
             }
 
             Collection<String> loadBeforeSet = description.getLoadBefore();
@@ -164,15 +169,24 @@ public final class SimplePluginManager implements PluginManager {
                         softDependencies.put(loadBeforeTarget, shortSoftDependency);
                     }
                 }
+                log("lbs_ ", loadBeforeSet); // LOGLINE
             }
         }
 
+        boolean skipOnce = false;
         while (!plugins.isEmpty()) {
             boolean missingDependency = true;
             Iterator<String> pluginIterator = plugins.keySet().iterator();
 
             while (pluginIterator.hasNext()) {
                 String plugin = pluginIterator.next();
+                log("chk_ " + plugin); // LOGLINE
+                if ("dynmap".equalsIgnoreCase(plugin) && !skipOnce) {
+                    skipOnce = true;
+                    missingDependency = false;
+                    log("skp_ " + plugin);
+                    continue;
+                }
 
                 if (dependencies.containsKey(plugin)) {
                     Iterator<String> dependencyIterator = dependencies.get(plugin).iterator();
@@ -182,6 +196,7 @@ public final class SimplePluginManager implements PluginManager {
 
                         // Dependency loaded
                         if (loadedPlugins.contains(dependency)) {
+                            log("rmd_ " + dependency); // LOGLINE
                             dependencyIterator.remove();
 
                         // We have a dependency not found
@@ -213,6 +228,7 @@ public final class SimplePluginManager implements PluginManager {
                         // Soft depend is no longer around
                         if (!plugins.containsKey(softDependency)) {
                             softDependencyIterator.remove();
+                            log("rms_ " + softDependency); // LOGLINE
                         }
                     }
 
@@ -225,6 +241,7 @@ public final class SimplePluginManager implements PluginManager {
                     File file = plugins.get(plugin);
                     pluginIterator.remove();
                     missingDependency = false;
+                    log("fld_ " + plugin); // LOADLINE
 
                     try {
                         result.add(loadPlugin(file));
@@ -245,6 +262,7 @@ public final class SimplePluginManager implements PluginManager {
                     String plugin = pluginIterator.next();
 
                     if (!dependencies.containsKey(plugin)) {
+                        log("frc_ " + plugin); // LOGLINE
                         softDependencies.remove(plugin);
                         missingDependency = false;
                         File file = plugins.get(plugin);
@@ -687,5 +705,13 @@ public final class SimplePluginManager implements PluginManager {
      */
     public void useTimings(boolean use) {
         useTimings = use;
+    }
+
+    private void log(String string, Collection<String> set) {
+        log(string + Arrays.toString(set.toArray()));
+    }
+
+    private void log(String s) {
+        Logger.getLogger("Minecraft").info(s);
     }
 }
