@@ -3,11 +3,11 @@ package org.bukkit.metadata;
 import static org.junit.Assert.assertEquals;
 
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.TestPlugin;
+import org.bukkit.plugin.TestPluginFactory;
 import org.junit.Test;
 
 public class FixedMetadataValueTest {
-    private Plugin plugin = new TestPlugin("X");
+    private Plugin plugin = TestPluginFactory.getPlugin("X");
     private FixedMetadataValue subject;
 
     private void valueEquals(Object value) {

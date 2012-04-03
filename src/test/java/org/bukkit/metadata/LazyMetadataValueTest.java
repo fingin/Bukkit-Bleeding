@@ -1,6 +1,7 @@
 package org.bukkit.metadata;
 
-import org.bukkit.plugin.TestPlugin;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.TestPluginFactory;
 import org.junit.Test;
 
 import java.util.concurrent.Callable;
@@ -9,7 +10,7 @@ import static org.junit.Assert.*;
 
 public class LazyMetadataValueTest {
     private LazyMetadataValue subject;
-    private TestPlugin plugin = new TestPlugin("x");
+    private Plugin plugin = TestPluginFactory.getPlugin("x");
 
     @Test
     public void testLazyInt() {

@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.TestPlugin;
+import org.bukkit.plugin.TestPluginFactory;
 import org.junit.Test;
 
 public class MetadataStoreTest {
-    private Plugin pluginX = new TestPlugin("x");
-    private Plugin pluginY = new TestPlugin("y");
+    private Plugin pluginX = TestPluginFactory.getPlugin("x");
+    private Plugin pluginY = TestPluginFactory.getPlugin("y");
 
     StringMetadataStore subject = new StringMetadataStore();
 
