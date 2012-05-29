@@ -112,9 +112,6 @@ public class JavaPluginLoader implements PluginLoader {
         }
 
         for (String pluginName : depend) {
-            if (loaders == null) {
-                throw new UnknownDependencyException(pluginName);
-            }
             PluginClassLoader current = loaders.get(pluginName);
 
             if (current == null) {
@@ -137,6 +134,8 @@ public class JavaPluginLoader implements PluginLoader {
                 loader = new PluginClassLoader(this, urls, getClass().getClassLoader());
             }
 
+            loaders.put(description.getName(), loader);
+
             Class<?> jarClass = Class.forName(description.getMain(), true, loader);
             Class<? extends JavaPlugin> plugin = jarClass.asSubclass(JavaPlugin.class);
 
@@ -146,12 +145,13 @@ public class JavaPluginLoader implements PluginLoader {
 
             result.initialize(this, server, description, dataFolder, file, loader);
         } catch (InvocationTargetException ex) {
+            loaders.remove(description.getName());
             throw new InvalidPluginException(ex.getCause());
         } catch (Throwable ex) {
+            loaders.remove(description.getName());
             throw new InvalidPluginException(ex);
         }
 
-        loaders.put(description.getName(), loader);
 
         return result;
     }
@@ -232,7 +232,7 @@ public class JavaPluginLoader implements PluginLoader {
                 PluginClassLoader loader = loaders.get(current);
 
                 try {
-                    cachedClass = loader.findClass(name, false);
+                    cachedClass = loader.grabClass(name);
                 } catch (ClassNotFoundException cnfe) {}
                 if (cachedClass != null) {
                     return cachedClass;
@@ -369,9 +369,8 @@ public class JavaPluginLoader implements PluginLoader {
 
             if (cloader instanceof PluginClassLoader) {
                 PluginClassLoader loader = (PluginClassLoader) cloader;
-                Set<String> names = loader.getClasses();
 
-                for (String name : names) {
+                for (String name : loader.getLoadedClasses()) {
                     removeClass(name);
                 }
             }
