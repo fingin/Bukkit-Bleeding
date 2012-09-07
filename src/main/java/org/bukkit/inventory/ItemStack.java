@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -19,7 +21,6 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
     private int amount = 0;
     private MaterialData data = null;
     private short durability = 0;
-    private Map<Enchantment, Integer> enchantments = new HashMap<Enchantment, Integer>();
     private ItemMeta meta;
 
     public ItemStack(final int type) {
@@ -208,7 +209,11 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
 
     @Override
     public String toString() {
-        return "ItemStack{" + getType().name() + " x " + getAmount() + "}";
+        StringBuilder toString = new StringBuilder("ItemStack{").append(getType().name()).append(" x ").append(getAmount());
+        if (meta != null) {
+            toString.append(", ").append(meta);
+        }
+        return toString.append('}').toString();
     }
 
     @Override
@@ -220,7 +225,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
         ItemStack item = (ItemStack) obj;
         // Account for ItemMeta
 
-        return item.getAmount() == getAmount() && item.getTypeId() == getTypeId() && getDurability() == item.getDurability() && getEnchantments().equals(item.getEnchantments());
+        return item.getAmount() == getAmount() && item.getTypeId() == getTypeId() && getDurability() == item.getDurability() && Bukkit.getItemFactory().equals(meta, item.getItemMeta());
     }
 
     @Override
@@ -228,7 +233,10 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
         try {
             ItemStack itemStack = (ItemStack) super.clone();
 
-            itemStack.enchantments = new HashMap<Enchantment, Integer>(this.enchantments);
+            if (this.meta != null) {
+                itemStack.meta = this.meta.clone();
+            }
+
             if (this.data != null) {
                 itemStack.data = this.data.clone();
             }
@@ -255,7 +263,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @return True if this has the given enchantment
      */
     public boolean containsEnchantment(Enchantment ench) {
-        return enchantments.containsKey(ench);
+        return meta == null ? false : meta.hasEnchant(ench);
     }
 
     /**
@@ -265,7 +273,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @return Level of the enchantment, or 0
      */
     public int getEnchantmentLevel(Enchantment ench) {
-        return enchantments.get(ench);
+        return meta == null ? 0 : meta.getEnchantLevel(ench);
     }
 
     /**
@@ -274,7 +282,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @return Map of enchantments.
      */
     public Map<Enchantment, Integer> getEnchantments() {
-        return ImmutableMap.copyOf(enchantments);
+        return meta == null ? ImmutableMap.<Enchantment, Integer>of() : meta.getEnchants();
     }
 
     /**
@@ -284,8 +292,12 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * for each element of the map.
      *
      * @param enchantments Enchantments to add
+     * @throws IllegalArgumentException if the specified enchantments is null
+     * @throws IllegalArgumentException if any specific enchantment or level is null.
+     *          <b>Warning</b>: Some enchantments may be added before this exception is thrown.
      */
     public void addEnchantments(Map<Enchantment, Integer> enchantments) {
+        Validate.notNull(enchantments, "Enchantments cannot be null");
         for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
             addEnchantment(entry.getKey(), entry.getValue());
         }
@@ -300,6 +312,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @param level Level of the enchantment
      */
     public void addEnchantment(Enchantment ench, int level) {
+        Validate.notNull(ench, "Enchantment cannot be null");
         if ((level < ench.getStartLevel()) || (level > ench.getMaxLevel())) {
             throw new IllegalArgumentException("Enchantment level is either too low or too high (given " + level + ", bounds are " + ench.getStartLevel() + " to " + ench.getMaxLevel());
         } else if (!ench.canEnchantItem(this)) {
@@ -335,7 +348,7 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @param level Level of the enchantment
      */
     public void addUnsafeEnchantment(Enchantment ench, int level) {
-        enchantments.put(ench, level);
+        (meta == null ? meta = Bukkit.getItemFactory().getItemMeta(this) : meta).addEnchant(ench, level, true);
     }
 
     /**
@@ -345,8 +358,12 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @return Previous level, or 0
      */
     public int removeEnchantment(Enchantment ench) {
-        Integer previous = enchantments.remove(ench);
-        return (previous == null) ? 0 : previous;
+        int level = getEnchantmentLevel(ench);
+        if (level == 0 || meta == null) {
+            return level;
+        }
+        meta.removeEnchant(ench);
+        return level;
     }
 
     public Map<String, Object> serialize() {
@@ -433,11 +450,11 @@ public class ItemStack implements Cloneable, ConfigurationSerializable {
      * @return True if successfully applied ItemMeta
      */
     public boolean setItemMeta(ItemMeta itemMeta) {
-        if (Bukkit.getServer().getItemFactory().isValidMeta(meta, this)) {
-            return false;
+        if (!Bukkit.getServer().getItemFactory().isValidMeta(itemMeta, this)) {
+            throw new IllegalArgumentException(itemMeta + " is not applicable for " + this);
         }
 
-        this.meta = itemMeta.clone();
+        this.meta = itemMeta == null ? null : itemMeta.clone();
         return true;
     }
 }
