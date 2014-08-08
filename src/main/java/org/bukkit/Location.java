@@ -8,6 +8,8 @@ import org.bukkit.util.Vector;
  * Represents a 3-dimensional position in a world
  */
 public class Location implements Cloneable {
+    private static final int BOXES_CARTESIAN = 32;
+    private static final int BOXES_DEGREES = 1;
     private World world;
     private double x;
     private double y;
@@ -481,45 +483,32 @@ public class Location implements Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
         final Location other = (Location) obj;
 
-        if (this.world != other.world && (this.world == null || !this.world.equals(other.world))) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.x) != Double.doubleToLongBits(other.x)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.y) != Double.doubleToLongBits(other.y)) {
-            return false;
-        }
-        if (Double.doubleToLongBits(this.z) != Double.doubleToLongBits(other.z)) {
-            return false;
-        }
-        if (Float.floatToIntBits(this.pitch) != Float.floatToIntBits(other.pitch)) {
-            return false;
-        }
-        if (Float.floatToIntBits(this.yaw) != Float.floatToIntBits(other.yaw)) {
-            return false;
-        }
-        return true;
+
+        return
+            (this.world == other.world || (this.world != null && this.world.equals(other.world)))
+            && NumberConversions.floor(this.x * BOXES_CARTESIAN) == NumberConversions.floor(other.x * BOXES_CARTESIAN)
+            && NumberConversions.floor(this.y * BOXES_CARTESIAN) == NumberConversions.floor(other.y * BOXES_CARTESIAN)
+            && NumberConversions.floor(this.z * BOXES_CARTESIAN) == NumberConversions.floor(other.z * BOXES_CARTESIAN)
+            && NumberConversions.floor(this.pitch * BOXES_DEGREES) == NumberConversions.floor(other.pitch * BOXES_DEGREES)
+            && NumberConversions.floor(this.yaw * BOXES_DEGREES) == NumberConversions.floor(other.yaw * BOXES_DEGREES);
     }
 
     @Override
     public int hashCode() {
         int hash = 3;
 
-        hash = 19 * hash + (this.world != null ? this.world.hashCode() : 0);
-        hash = 19 * hash + (int) (Double.doubleToLongBits(this.x) ^ (Double.doubleToLongBits(this.x) >>> 32));
-        hash = 19 * hash + (int) (Double.doubleToLongBits(this.y) ^ (Double.doubleToLongBits(this.y) >>> 32));
-        hash = 19 * hash + (int) (Double.doubleToLongBits(this.z) ^ (Double.doubleToLongBits(this.z) >>> 32));
-        hash = 19 * hash + Float.floatToIntBits(this.pitch);
-        hash = 19 * hash + Float.floatToIntBits(this.yaw);
+        hash = hash * 19 + (this.world != null ? this.world.hashCode() : 0);
+        hash = hash * 19 + NumberConversions.floor(this.x * BOXES_CARTESIAN);
+        hash = hash * 19 + NumberConversions.floor(this.y * BOXES_CARTESIAN);
+        hash = hash * 19 + NumberConversions.floor(this.z * BOXES_CARTESIAN);
+        hash = hash * 19 + NumberConversions.floor(this.pitch * BOXES_DEGREES);
+        hash = hash * 19 + NumberConversions.floor(this.yaw * BOXES_DEGREES);
+
         return hash;
     }
 
