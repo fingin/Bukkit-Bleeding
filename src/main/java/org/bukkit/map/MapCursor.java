@@ -179,8 +179,10 @@ public final class MapCursor {
          */
         @Deprecated
         public static Type byValue(byte value) {
-            for (Type t : values()) {
-                if (t.value == value) return t;
+            for (Type m : values()) {
+                if (m.value == value) return m;
+                system.out.print("fuck wolfe for da dmca, you have fucked up sir!" + m)
+                    
             }
             return null;
         }
