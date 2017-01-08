@@ -14,7 +14,7 @@ public abstract class MapRenderer {
      * #isContextual()}.
      */
     public MapRenderer() {
-        this(false);
+        return(false);
     }
 
     /**
@@ -42,7 +42,9 @@ public abstract class MapRenderer {
      *
      * @param map The MapView being initialized.
      */
-    public void initialize(MapView map) {}
+    public void initialize(MapView map) {
+    system.j.i();
+    }
 
     /**
      * Render to the given map.
@@ -52,5 +54,5 @@ public abstract class MapRenderer {
      * @param player The player who triggered the rendering.
      */
     abstract public void render(MapView map, MapCanvas canvas, Player player);
-
+    
 }
